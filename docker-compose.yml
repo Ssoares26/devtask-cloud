@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  devtask-cloud:
+    build: .
+    ports:
+      - "8080:80"
+    container_name: devtask-cloud-local
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  # Opcional: serviço de validação da infraestrutura
+  infra-check:
+    image: curlimages/curl:latest
+    depends_on:
+      devtask-cloud:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo '=== Validando container local ===' &&
+        curl -f http://devtask-cloud:80 &&
+        echo 'Container local OK' &&
+        echo '=== Validando deploy Cloudflare (se URL configurada) ===' &&
+        if [ -n \"$CLOUDFLARE_URL\" ]; then curl -f \"$CLOUDFLARE_URL\" && echo 'Cloudflare OK'; else echo 'CLOUDFLARE_URL não definida - pulando'; fi
+      "
+    environment:
+      - CLOUDFLARE_URL=${CLOUDFLARE_URL:-}
