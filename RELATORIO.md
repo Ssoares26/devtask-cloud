@@ -10,6 +10,7 @@
 **Integrantes:**
 - Rebeka Natália — `rebeka-natalia@users.noreply.github.com`
 - Nayara G. Freire — `nayarag-freire@users.noreply.github.com`
+- **Ssoares26** — `soares26@example.com`
 
 **Data:** Novembro 2026
 **Versão:** 1.0
@@ -67,24 +68,26 @@ A divisão seguiu o modelo **feature-based** com responsabilidades claras e comm
 
 ### 2.1 Matriz de Responsabilidades (RACI)
 
-| Entregável | Rebeka Natália | Nayara G. Freire |
-|------------|----------------|------------------|
-| `index.html` | **R/A** (Responsible/Accountable) | I (Informed) |
-| `style.css` | **R/A** | I |
-| `app.js` | **R/A** | I |
-| `Dockerfile` | C (Consulted) | **R/A** |
-| `.dockerignore` | C | **R/A** |
-| `.github/workflows/ci-cd.yml` | **R/A** | C |
-| `README.md` | C | **R/A** |
-| `RELATORIO.md` | C | **R/A** |
-| Git History / Commits | Commits 1, 3 | Commits 2, 4 |
+| Entregável | Rebeka Natália | Nayara G. Freire | Ssoares26 |
+|------------|----------------|------------------|-----------|
+| `index.html` | **R/A** (Responsible/Accountable) | I (Informed) | C |
+| `style.css` | **R/A** | I | C |
+| `app.js` | **R/A** | I | C |
+| `Dockerfile` | C (Consulted) | **R/A** | C |
+| `.dockerignore` | C | **R/A** | C |
+| `.github/workflows/ci-cd.yml` | **R/A** | C | C |
+| `README.md` | C | **R/A** | C |
+| `RELATORIO.md` | C | **R/A** | C |
+| `docker-compose.yml` | I | I | **R/A** |
+| Git History / Commits | Commits 1, 3 | Commits 2, 4 | Commits 5, 6 |
 
 ### 2.2 Justificativa da Divisão
 
 - **Rebeka (Frontend + CI)**: Especialização em UX, CSS moderno, JavaScript vanilla, pipelines YAML
 - **Nayara (DevOps + Docs)**: Containerização, otimização de imagens, documentação técnica, relatórios
+- **Ssoares26 (Orquestração + Infra + Monitoramento)**: Docker Compose para ambiente local, validação de infraestrutura (health checks, smoke tests), monitoramento de deploy em nuvem (Cloudflare Pages), automação de demonstração
 
-Ambas revisaram o código da outra via PRs simulados (commits alternados), garantindo *code ownership* compartilhado.
+Ambas revisaram o código da outra via PRs simulados (commits alternados), garantindo *code ownership* compartilhado. Ssoares26 validou a stack completa via `docker-compose up` e scripts de verificação.
 
 ---
 
@@ -129,6 +132,11 @@ Ambas revisaram o código da outra via PRs simulados (commits alternados), garan
 │  │  COPY index.html style.css app.js /usr/share/nginx/html/     │  │
 │  │  EXPOSE 80                                                   │  │
 │  │  CMD ["nginx", "-g", "daemon off;"]                          │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │  docker-compose.yml                                          │  │
+│  │  • devtask-cloud: build + port 8080 + healthcheck            │  │
+│  │  • infra-check: validação container + Cloudflare (opcional)  │  │
 │  └──────────────────────────────────────────────────────────────┘  │
 └────────────────────────────────────────────────────────────────────┘
 ```

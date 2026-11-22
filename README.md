@@ -98,7 +98,7 @@ O workflow `.github/workflows/ci-cd.yml` define dois jobs:
 
 | Integrante | Responsabilidades | Commits |
 |------------|-------------------|---------|
-| **Ssoares26** | Arquitetura geral, Integração CI/CD, Deploy Cloudflare, Revisão final | 5 |
+| **Ssoares26** | Arquitetura geral, Integração CI/CD, Deploy Cloudflare, Docker Compose, Validação de infraestrutura, Monitoramento de deploy | 5, 6 |
 | **Rebeka Natália** | Interface (HTML/CSS), Lógica da aplicação (JS), Pipeline CI/CD | 1, 3 |
 | **Nayara G. Freire** | Dockerfile, .dockerignore, Documentação (README, RELATORIO) | 2, 4 |
 
