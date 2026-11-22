@@ -1,0 +1,25 @@
+{
+  "name": "devtask-cloud",
+  "version": "1.0.0",
+  "description": "Gerenciador de tarefas moderno, responsivo e funcional com tema escuro elegante, persistência em localStorage e deploy automatizado via CI/CD.",
+  "main": "app.js",
+  "scripts": {
+    "demo": "node gravar-demo.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ssoares26/devtask-cloud.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Ssoares26/devtask-cloud/issues"
+  },
+  "homepage": "https://github.com/Ssoares26/devtask-cloud#readme",
+  "devDependencies": {
+    "playwright": "^1.65.1"
+  }
+}

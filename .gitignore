@@ -1,0 +1,4 @@
+/recordings/
+node_modules/
+*.webm
+.demonstracao-devtask.mp4
