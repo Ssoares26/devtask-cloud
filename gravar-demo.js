@@ -1,148 +1,113 @@
 /**
  * gravar-demo.js - Gravação automática da demonstração do DevTask Cloud
- * Abre navegação em 1280x720 com recordVideo, visita telas-chave,
- * interage com a app e gera .mp4 via ffmpeg.
+ * Navegação direta por URLs + gravação em .webm (sem ffmpeg)
  */
 
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 
-// Configurações
 const WIDTH = 1280;
 const HEIGHT = 720;
-const PAUSE_MS = 6000; // pausa em cada tela (ms)
 const VIDEO_DIR = path.join(__dirname, 'recordings');
-const OUTPUT_VIDEO = path.join(__dirname, 'demonstracao-devtask.mp4');
 const RECORDING_FILE = path.join(VIDEO_DIR, 'raw.webm');
+const OUTPUT_VIDEO = path.join(__dirname, 'demonstracao-devtask.webm');
 
-// URLs
-const GITHUB_REPO = 'https://github.com/Ssoares26/devtask-cloud';
-const CLOUDFLARE_URL = 'https://devtask-cloud.pages.dev';
+const PAUSE_A = 6000;
+const PAUSE_B = 7000;
+const PAUSE_C = 6000;
+const PAUSE_D = 7000;
+const PAUSE_E = 5000;
 
-async function pause(ms) {
-    await new Promise(r => setTimeout(r, ms));
+async function sleep(ms) {
+    return new Promise(r => setTimeout(r, ms));
 }
 
 async function main() {
-    // Preparar dir de gravação
     if (!fs.existsSync(VIDEO_DIR)) {
         fs.mkdirSync(VIDEO_DIR, { recursive: true });
     }
-    // Remover arquivo anterior se existir
     if (fs.existsSync(RECORDING_FILE)) {
         fs.unlinkSync(RECORDING_FILE);
     }
 
-    const browser = await chromium.launch({
-        headless: false, // precisa ser visível para gravação correta
-        args: ['--start-maximized']
-    });
-
+    const browser = await chromium.launch({ headless: true });
     const context = await browser.newContext({
         viewport: { width: WIDTH, height: HEIGHT },
-        ignoreHTTPSErrors: true,
-        deviceScaleFactor: 1
+        recordVideo: { dir: VIDEO_DIR, mimeType: 'video/webm' }
     });
-
-    // Habilitar gravação de vídeo no contexto
     const page = await context.newPage();
-    await page.route('**/*', route => route.continue()); // ignorar erros de rede pontuais
+
     console.log('Iniciando gravação...');
-    console.log('Navegador aberto em %dx%d — aguarde as fases.', WIDTH, HEIGHT);
 
     try {
-        // =========================================================
-        // FASE A: Página inicial do repositório GitHub
-        // =========================================================
-        console.log('\n[Fase A] Abrindo repositório GitHub...');
-        await page.setViewportSize({ width: WIDTH, height: HEIGHT });
-        await page.goto(GITHUB_REPO, { waitUntil: 'networkidle' });
-        await pause(PAUSE_MS);
+        // FASE A: Página inicial do repositório
+        console.log('[Fase A] https://github.com/Ssoares26/devtask-cloud');
+        await page.goto('https://github.com/Ssoares26/devtask-cloud', { waitUntil: 'domcontentloaded' });
+        await sleep(PAUSE_A);
 
-        // =========================================================
         // FASE B: Histórico de commits
-        // =========================================================
-        console.log('[Fase B] Navegando para histórico de commits...');
-        await page.click('"commits"');
-        await page.waitForURL('**/commits/main', { timeout: 15000 }).catch(() => {});
-        await pause(PAUSE_MS);
+        console.log('[Fase B] https://github.com/Ssoares26/devtask-cloud/commits/main');
+        await page.goto('https://github.com/Ssoares26/devtask-cloud/commits/main', { waitUntil: 'domcontentloaded' });
+        await sleep(PAUSE_B);
 
-        // =========================================================
-        // FASE C: Dockerfile + CI/CD workflow
-        // =========================================================
-        console.log('[Fase C] Abrindo Dockerfile...');
-        await page.goto(`${GITHUB_REPO}/blob/main/Dockerfile`, { waitUntil: 'domcontentloaded' });
-        await pause(PAUSE_MS);
+        // FASE C: Dockerfile
+        console.log('[Fase C] Dockerfile');
+        await page.goto('https://github.com/Ssoares26/devtask-cloud/blob/main/Dockerfile', { waitUntil: 'domcontentloaded' });
+        await sleep(PAUSE_C);
 
-        console.log('[Fase C] Abrindo ci-cd.yml...');
-        await page.goto(`${GITHUB_REPO}/blob/main/.github/workflows/ci-cd.yml`, { waitUntil: 'domcontentloaded' });
-        await pause(PAUSE_MS);
+        // FASE C: ci-cd.yml
+        console.log('[Fase C] ci-cd.yml');
+        await page.goto('https://github.com/Ssoares26/devtask-cloud/blob/main/.github/workflows/ci-cd.yml', { waitUntil: 'domcontentloaded' });
+        await sleep(PAUSE_D);
 
-        // =========================================================
-        // FASE D: Aba Actions (pipeline verde)
-        // =========================================================
-        console.log('[Fase D] Abrindo aba Actions...');
-        await page.goto(`${GITHUB_REPO}/actions`, { waitUntil: 'domcontentloaded' });
-        // Clicar no último workflow run
-        const runRow = await page.locator('.workflow-table-row').first();
-        if (await runRow.isVisible().catch(() => false)) {
-            await runRow.click();
+        // FASE D: Actions
+        console.log('[Fase D] https://github.com/Ssoares26/devtask-cloud/actions');
+        await page.goto('https://github.com/Ssoares26/devtask-cloud/actions', { waitUntil: 'domcontentloaded' });
+        await sleep(PAUSE_D);
+
+        // FASE E: App na nuvem (se disponível)
+        console.log('[Fase E] https://devtask-cloud.pages.dev');
+        try {
+            await page.goto('https://devtask-cloud.pages.dev', { waitUntil: 'domcontentloaded', timeout: 15000 });
+        } catch {
+            console.log('[Fase E] URL nao disponivel - pulando interacao');
         }
-        await pause(PAUSE_MS);
+        await sleep(PAUSE_E);
 
-        // =========================================================
-        // FASE E: App ao vivo - adicionar tarefas
-        // =========================================================
-        console.log('[Fase E] Abrindo app na nuvem...');
-        await page.goto(CLOUDFLARE_URL, { waitUntil: 'domcontentloaded' });
-        await pause(3000);
-
-        // Inserir primeira tarefa
+        // Tentar interagir com a app (se carregou)
         const input = await page.$('#task-input');
         if (input) {
             await input.fill('Estudar Docker Compose');
             await page.keyboard.press('Enter');
-            await pause(3000);
+            await sleep(3000);
+            const checkbox = await page.$('.task-checkbox');
+            if (checkbox) await checkbox.click();
+            await sleep(PAUSE_E);
+        } else {
+            console.log('[Fase E] Campo de input nao encontrado (app pode nao ter carregado)');
         }
 
-        // Inserir segunda tarefa
-        if (input) {
-            await input.fill('Preparar relatório técnico');
-            await page.keyboard.press('Enter');
-            await pause(3000);
-        }
-
-        // Marcar a primeira como concluída (primeiro checkbox da lista)
-        const firstCheckbox = await page.$('.task-checkbox');
-        if (firstCheckbox) {
-            await firstCheckbox.click();
-            await pause(PAUSE_MS);
-        }
-
-        console.log('\n[Gravação concluída] Fechando navegador...');
+        console.log('\nGravao concluida!');
 
     } catch (err) {
-        console.error('Erro na gravação:', err.message);
+        console.error('Erro:', err.message);
     } finally {
         await page.close();
         await browser.close();
     }
 
-    // Converter .webm → .mp4 com ffmpeg
-    console.log('\nConvertendo para MP4 (ffmpeg)...');
-    try {
-        execSync(`ffmpeg -y -i "${RECORDING_FILE}" -c:v libx264 -crf 18 -preset medium -pix_fmt yuv420p "${OUTPUT_VIDEO}"`, { stdio: 'inherit' });
-        console.log('Vídeo salvo em:', OUTPUT_VIDEO);
-    } catch (e) {
-        console.warn('ffmpeg não instalado ou falhou — vídeo original (.webm) permaneceu em:', RECORDING_FILE);
+    // Mover arquivo gravado da pasta recordings/ para raiz
+    const files = fs.readdirSync(VIDEO_DIR).filter(f => f.endsWith('.webm')).sort();
+    if (files.length > 0) {
+        const src = path.join(VIDEO_DIR, files[0]);
+        if (fs.existsSync(OUTPUT_VIDEO)) fs.unlinkSync(OUTPUT_VIDEO);
+        fs.renameSync(src, OUTPUT_VIDEO);
+        console.log('Video movido para:', OUTPUT_VIDEO);
     }
 
-    // Limpar arquivo temporário webm (se mp4 foi criado)
-    if (fs.existsSync(OUTPUT_VIDEO) && fs.existsSync(RECORDING_FILE)) {
-        try { fs.unlinkSync(RECORDING_FILE); console.log('Temp clean up OK'); } catch {}
-    }
+    // Limpar pasta temporaria
+    try { fs.rmSync(VIDEO_DIR, { recursive: true, force: true }); } catch {}
 }
 
 main().catch(e => { console.error(e); process.exit(1); });
