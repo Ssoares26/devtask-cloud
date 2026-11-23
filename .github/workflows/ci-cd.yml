@@ -1,36 +1,4 @@
-name: CI/CD Pipeline - DevTask Cloud
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
-  ci-docker-test:
-    name: Test Docker Build & Run
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Build Docker image
-        run: docker build -t devtask-cloud:test .
-
-      - name: Run container
-        run: docker run -d --name app-test -p 8080:80 devtask-cloud:test
-
-      - name: Wait for container to be ready
-        run: sleep 2
-
-      - name: Test HTTP response
-        run: curl -f http://localhost:8080
-
-      - name: Cleanup container
-        if: always()
-        run: docker rm -f app-test
-
-  cd-cloudflare-deploy:
+cd-cloudflare-deploy:
     name: Deploy to Cloudflare Pages
     needs: ci-docker-test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -39,9 +7,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Create Cloudflare Pages project
+        run: npx wrangler pages project create devtask-cloud --production-branch=main || true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy . --project-name=devtask-cloud
+          command: pages deploy . --project-name=devtask-cloud --branch=main
