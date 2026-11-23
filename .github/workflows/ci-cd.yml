@@ -1,4 +1,30 @@
-cd-cloudflare-deploy:
+name: CI/CD Pipeline - DevTask Cloud
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  ci-docker-test:
+    name: Test Docker Build & Run
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t devtask-cloud:test .
+
+      - name: Run container and verify HTTP 200
+        run: |
+          docker run -d --name app-test -p 8080:80 devtask-cloud:test
+          sleep 2
+          curl -f http://localhost:8080
+          docker stop app-test
+
+  cd-cloudflare-deploy:
     name: Deploy to Cloudflare Pages
     needs: ci-docker-test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
